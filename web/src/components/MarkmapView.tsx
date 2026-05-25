@@ -231,6 +231,7 @@ export function MarkmapView() {
   const pathMapRef = useRef<Map<string, string>>(new Map());
   const metaMapRef = useRef<Map<string, Record<string, string>>>(new Map());
   const sectionsMapRef = useRef<Map<string, Section[]>>(new Map());
+  const expandedNodesRef = useRef<Set<string>>(new Set());
   const mdContent = useMindsparkStore((s) => s.mdContent);
   const selectNode = useMindsparkStore((s) => s.selectNode);
   const mdRef = useRef(mdContent);
@@ -256,7 +257,7 @@ export function MarkmapView() {
       sectionsMapRef.current = sectionsByHeading;
 
       pathMapRef.current = buildPathMapFromDOM(svgRef.current);
-      enrichNodes(svgRef.current, metaByHeading, sectionsByHeading, new Set<string>());
+      enrichNodes(svgRef.current, metaByHeading, sectionsByHeading, expandedNodesRef.current);
     }
   }, [mdContent]);
 
@@ -270,10 +271,29 @@ export function MarkmapView() {
 
     const dataPath = nodeEl.dataset.path ?? '';
     const path = pathMapRef.current.get(dataPath) ?? '';
+
+    // Toggle section expand/collapse
+    const leafTitle = path ? path.split('/').pop() ?? path : '';
+    const nodeSections = sectionsMapRef.current.get(leafTitle);
+    if (nodeSections && nodeSections.length > 0) {
+      const expanded = expandedNodesRef.current;
+      if (expanded.has(dataPath)) {
+        expanded.delete(dataPath);
+      } else {
+        expanded.add(dataPath);
+      }
+      // Re-enrich to update section visibility
+      const svg = svgRef.current;
+      if (svg) {
+        enrichNodes(svg, metaMapRef.current, sectionsMapRef.current, expanded);
+        mmRef.current?.fit();
+      }
+    }
+
+    // Select node for meta panel
     if (path) {
-      const leafTitle = path.split('/').pop() ?? path;
       const meta = metaMapRef.current.get(leafTitle) ?? null;
-      const sections = sectionsMapRef.current.get(leafTitle) ?? [];
+      const sections = nodeSections ?? [];
       selectNode(path, meta, sections);
     }
   }, [selectNode]);
