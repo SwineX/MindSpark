@@ -256,6 +256,7 @@ export function MarkmapView() {
       metaMapRef.current = metaByHeading;
       sectionsMapRef.current = sectionsByHeading;
 
+      expandedNodesRef.current = new Set();
       pathMapRef.current = buildPathMapFromDOM(svgRef.current);
       enrichNodes(svgRef.current, metaByHeading, sectionsByHeading, expandedNodesRef.current);
     }
