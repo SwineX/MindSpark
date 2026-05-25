@@ -62,4 +62,51 @@ describe('FileStore', () => {
 
     await ws.cleanup();
   });
+
+  it('deleteFile removes a file', async () => {
+    const ws = await createTmpWorkspace();
+    await ws.writeMd('to-delete.md', '# Bye');
+    const store = new FileStore(ws.dir);
+
+    await store.deleteFile('to-delete.md');
+
+    const exists = await store.fileExists('to-delete.md');
+    expect(exists).toBe(false);
+
+    await ws.cleanup();
+  });
+
+  it('deleteFile on non-existent file throws', async () => {
+    const ws = await createTmpWorkspace();
+    const store = new FileStore(ws.dir);
+
+    await expect(store.deleteFile('nonexistent.md')).rejects.toThrow();
+
+    await ws.cleanup();
+  });
+
+  it('fileExists returns true/false correctly', async () => {
+    const ws = await createTmpWorkspace();
+    await ws.writeMd('existing.md', '# Here');
+    const store = new FileStore(ws.dir);
+
+    const yes = await store.fileExists('existing.md');
+    const no = await store.fileExists('missing.md');
+
+    expect(yes).toBe(true);
+    expect(no).toBe(false);
+
+    await ws.cleanup();
+  });
+
+  it('rejects path traversal attempts', async () => {
+    const ws = await createTmpWorkspace();
+    const store = new FileStore(ws.dir);
+
+    await expect(store.readFile('../outside.md')).rejects.toThrow(
+      /Path traversal/,
+    );
+
+    await ws.cleanup();
+  });
 });
