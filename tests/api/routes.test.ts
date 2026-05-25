@@ -6,7 +6,6 @@ import { createTmpWorkspace } from '../helpers/tmp-workspace.js';
 import type { AddressInfo } from 'node:net';
 
 describe('REST API', () => {
-  let app: ReturnType<typeof createApp>;
   let server: http.Server;
   let baseUrl: string;
   let ws: Awaited<ReturnType<typeof createTmpWorkspace>>;
@@ -20,8 +19,9 @@ describe('REST API', () => {
     await ws.writeMd('empty.md', '# Empty');
 
     const store = new FileStore(ws.dir);
-    app = createApp(store);
-    server = app.listen(0);
+    const created = createApp(store);
+    server = created.server;
+    server.listen(0);
     const port = (server.address() as AddressInfo).port;
     baseUrl = `http://localhost:${port}`;
   });

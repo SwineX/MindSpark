@@ -3,6 +3,7 @@ import { FileStore } from '../core/file-store.js';
 import { parseMindmap, findNode, MindmapNode } from '../core/parser.js';
 import { parseMeta, stripComment, writeMeta, mergeMeta, MetaRecord } from '../core/meta-manager.js';
 import { toSnapshot } from '../core/snapshot.js';
+import { WSManager } from './ws.js';
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -51,7 +52,7 @@ function parseNodePath(raw: string): string {
 
 // ── Routes factory ───────────────────────────────────────────────────────────
 
-export function createRoutes(store: FileStore): Router {
+export function createRoutes(store: FileStore, wsManager: WSManager): Router {
   const router = Router();
 
   // 1. GET /mindmaps — list .md files
@@ -171,6 +172,8 @@ export function createRoutes(store: FileStore): Router {
         body: '',
         children: [],
       });
+
+      wsManager.broadcast({ type: 'node_added', file, parent_path, title });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
@@ -194,7 +197,10 @@ export function createRoutes(store: FileStore): Router {
       // ── 7. Move operation ──────────────────────────────────────────────
       if (raw.endsWith('/move')) {
         const nodePath = parseNodePath(raw.slice(0, -5));
-        return handleMove(store, file, nodePath, req, res);
+        const new_parent_path = req.body.new_parent_path;
+        await handleMove(store, file, nodePath, req, res);
+        wsManager.broadcast({ type: 'node_moved', file, path: nodePath, new_parent_path });
+        return;
       }
 
       // ── 5. Update operation ────────────────────────────────────────────
@@ -241,6 +247,8 @@ export function createRoutes(store: FileStore): Router {
       const updatedNode = findNode(updatedTree, nodePath);
 
       res.json(updatedNode);
+
+      wsManager.broadcast({ type: 'node_updated', file, path: nodePath, changes: newMeta ?? {} });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
@@ -291,6 +299,8 @@ export function createRoutes(store: FileStore): Router {
       await store.writeFile(file, result.join('\n'));
 
       res.json({ success: true });
+
+      wsManager.broadcast({ type: 'node_deleted', file, path: nodePath });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
