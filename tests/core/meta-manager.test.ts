@@ -26,6 +26,12 @@ describe('parseMeta', () => {
     expect(result).toEqual({});
   });
 
+  it('handles nested JSON objects', () => {
+    const line = '## X <!-- {"key":{"nested":true}} -->';
+    const result = parseMeta(line);
+    expect(result).toEqual({ key: { nested: true } });
+  });
+
   it('handles malformed JSON gracefully', () => {
     const line = '## X <!-- {bad json} -->';
     const result = parseMeta(line);

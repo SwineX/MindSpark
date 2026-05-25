@@ -2,7 +2,7 @@ export interface MetaRecord {
   [key: string]: unknown;
 }
 
-const COMMENT_RE = /<!--\s*(\{.*?\})\s*-->/;
+const COMMENT_RE = /<!--\s*(\{.*\})\s*-->/;
 
 export function parseMeta(line: string): MetaRecord {
   const match = line.match(COMMENT_RE);
@@ -15,7 +15,7 @@ export function parseMeta(line: string): MetaRecord {
 }
 
 export function stripComment(line: string): string {
-  return line.replace(/\s*<!--.*?-->\s*$/, '').trimEnd();
+  return line.replace(/\s*<!--.*-->\s*$/, '').trimEnd();
 }
 
 export function writeMeta(lineOrTitle: string, meta: MetaRecord): string {
