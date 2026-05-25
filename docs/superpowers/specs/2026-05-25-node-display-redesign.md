@@ -3,6 +3,20 @@
 **Date**: 2026-05-25
 **Status**: approved
 
+## Visual Reference
+
+![Node redesign mockup](node-redesign-mockup.png)
+
+Mockup source files (open in browser at `http://localhost:62098` with visual companion server running):
+
+- `.superpowers/brainstorm/35765-1779718725/content/node-redesign-v2.html` — final approved design
+
+Key visual decisions captured in the mockup:
+
+- **Expanded state**: sections unfold **above** the node title with colored borders, type tag is solid fill, status is bold colored text
+- **Collapsed state**: only the header row visible, ▼ indicator on the right
+- **Multi-node tree**: shows hierarchy with mixed types/statuses
+
 ## Overview
 
 Redesign how nodes render inside the markmap SVG view. Replace emoji-based indicators with a clean tag system, add collapsible sections, and introduce a centralized theme config.
