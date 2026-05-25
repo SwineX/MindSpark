@@ -234,8 +234,6 @@ export function MarkmapView() {
   const expandedNodesRef = useRef<Set<string>>(new Set());
   const mdContent = useMindsparkStore((s) => s.mdContent);
   const selectNode = useMindsparkStore((s) => s.selectNode);
-  const mdRef = useRef(mdContent);
-  mdRef.current = mdContent;
 
   useEffect(() => {
     if (!svgRef.current) return;
