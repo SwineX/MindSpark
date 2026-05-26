@@ -245,7 +245,7 @@ export function MarkmapView() {
 
     if (!mmRef.current) {
       mmRef.current = Markmap.create(svgRef.current, {
-        autoFit: true,
+        autoFit: false,
         duration: 0,
       });
     }
