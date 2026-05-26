@@ -290,7 +290,6 @@ export function MarkmapView() {
       const svg = svgRef.current;
       if (svg) {
         enrichNodes(svg, metaMapRef.current, sectionsMapRef.current, expanded);
-        mmRef.current?.fit();
       }
     }
 
