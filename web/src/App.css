@@ -76,6 +76,7 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 .markmap-svg {
@@ -86,6 +87,11 @@ body {
 /* ── Meta Panel ── */
 
 .meta-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
   padding: 10px 12px;
   background: var(--surface);
   border-left: 1px solid var(--border-soft);
@@ -93,9 +99,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex-shrink: 0;
-  transition: width var(--transition),
-              padding var(--transition),
+  transition: padding var(--transition),
               border-left-width var(--transition),
               opacity var(--transition);
 }
