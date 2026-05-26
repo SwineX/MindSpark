@@ -248,6 +248,15 @@ export function MarkmapView() {
         autoFit: false,
         duration: 0,
       });
+      // Disable d3-zoom's dblclick handler so our own dblclick→MetaPanel works
+      const svgEl = svgRef.current as any;
+      if (svgEl?.__zoom) {
+        const origFilter = svgEl.__zoom.filter;
+        svgEl.__zoom.filter((event: any) => {
+          if (event.type === 'dblclick') return false;
+          return origFilter ? origFilter(event) : true;
+        });
+      }
     }
 
     if (mdContent) {
