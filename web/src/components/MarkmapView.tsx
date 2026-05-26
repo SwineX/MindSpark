@@ -192,7 +192,8 @@ function enrichNodes(
 
     const headerHtml = `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${headerParts.join('')}</div>`;
 
-    contentDiv.innerHTML = sectionsHtml + headerHtml;
+    // flex column-reverse: header stays at bottom, sections expand upward
+    contentDiv.innerHTML = `<div style="display:flex;flex-direction:column-reverse;">${headerHtml}${sectionsHtml}</div>`;
   }
 }
 
