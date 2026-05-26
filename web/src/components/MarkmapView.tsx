@@ -291,11 +291,19 @@ export function MarkmapView() {
         enrichNodes(svg, metaMapRef.current, sectionsMapRef.current, expanded);
       }
     }
+  }, [selectNode]);
 
-    // Select node for meta panel
+  const handleDblClick = useCallback((e: MouseEvent) => {
+    const target = e.target as SVGElement;
+    const nodeEl = target.closest('.markmap-node') as HTMLElement | null;
+    if (!nodeEl) return;
+
+    const dataPath = nodeEl.dataset.path ?? '';
+    const path = pathMapRef.current.get(dataPath) ?? '';
     if (path) {
+      const leafTitle = path.split('/').pop() ?? path;
       const meta = metaMapRef.current.get(leafTitle) ?? null;
-      const sections = nodeSections ?? [];
+      const sections = sectionsMapRef.current.get(leafTitle) ?? [];
       selectNode(path, meta, sections);
     }
   }, [selectNode]);
@@ -304,8 +312,12 @@ export function MarkmapView() {
     const svg = svgRef.current;
     if (!svg) return;
     svg.addEventListener('click', handleClick);
-    return () => svg.removeEventListener('click', handleClick);
-  }, [handleClick]);
+    svg.addEventListener('dblclick', handleDblClick);
+    return () => {
+      svg.removeEventListener('click', handleClick);
+      svg.removeEventListener('dblclick', handleDblClick);
+    };
+  }, [handleClick, handleDblClick]);
 
   return <svg ref={svgRef} className="markmap-svg" />;
 }
