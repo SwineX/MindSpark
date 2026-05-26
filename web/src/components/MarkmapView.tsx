@@ -113,8 +113,13 @@ function enrichNodes(
     const contentDiv = nodeEl.querySelector('.markmap-foreign div div') as HTMLElement | null;
     if (!contentDiv) continue;
 
-    const raw = contentDiv.textContent ?? '';
-    const cleanTitle = raw.replace(/\s*<!--.*?-->\s*/, '').trim();
+    // Use cached data attribute to survive innerHTML rewrites on re-enrich
+    let cleanTitle = contentDiv.dataset.heading;
+    if (!cleanTitle) {
+      const raw = contentDiv.textContent ?? '';
+      cleanTitle = raw.replace(/\s*<!--.*?-->\s*/, '').trim();
+      contentDiv.dataset.heading = cleanTitle;
+    }
     const meta = metaByHeading.get(cleanTitle) || {};
     const dataPath = (nodeEl as HTMLElement).dataset.path ?? '';
     const isExpanded = expandedNodes.has(dataPath);
