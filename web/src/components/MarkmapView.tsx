@@ -129,6 +129,7 @@ function enrichNodes(
     /* --- on re-enrich: only toggle CSS classes (preserves transition) --- */
     if (contentDiv.querySelector('.mindspark-sections')) {
       const sectionsDiv = contentDiv.querySelector('.mindspark-sections')!;
+      sectionsDiv.classList.toggle('expanded', isExpanded);
       sectionsDiv.classList.toggle('collapsed', !isExpanded);
       const toggleBtn = contentDiv.querySelector('.mindspark-toggle') as HTMLElement | null;
       if (toggleBtn) toggleBtn.textContent = isExpanded ? 'collapse −' : 'expand +';
@@ -205,7 +206,9 @@ function enrichNodes(
 
     // Apply expanded state on first render if needed
     if (hasSections && isExpanded) {
-      contentDiv.querySelector('.mindspark-sections')!.classList.remove('collapsed');
+      const sectionsDiv = contentDiv.querySelector('.mindspark-sections')!;
+      sectionsDiv.classList.remove('collapsed');
+      sectionsDiv.classList.add('expanded');
     }
   }
 }
