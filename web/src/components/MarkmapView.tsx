@@ -246,22 +246,25 @@ export function MarkmapView() {
     if (!mmRef.current) {
       mmRef.current = Markmap.create(svgRef.current, {
         autoFit: false,
-        duration: 0,
+        duration: 400,
       });
     }
 
     if (mdContent) {
       const { root } = transformer.transform(mdContent);
-      mmRef.current.setData(root);
-      mmRef.current.fit();
 
       const { metaByHeading, sectionsByHeading } = parseMarkdown(mdContent);
       metaMapRef.current = metaByHeading;
       sectionsMapRef.current = sectionsByHeading;
 
-      expandedNodesRef.current = new Set();
-      pathMapRef.current = buildPathMapFromDOM(svgRef.current);
-      enrichNodes(svgRef.current, metaByHeading, sectionsByHeading, expandedNodesRef.current);
+      (async () => {
+        await mmRef.current!.setData(root);
+        expandedNodesRef.current = new Set();
+        pathMapRef.current = buildPathMapFromDOM(svgRef.current!);
+        enrichNodes(svgRef.current!, metaByHeading, sectionsByHeading, expandedNodesRef.current);
+        // Delay fit() past ResizeObserver debounce (100ms) + D3 transition
+        setTimeout(() => mmRef.current?.fit(), 200);
+      })();
     }
   }, [mdContent]);
 
