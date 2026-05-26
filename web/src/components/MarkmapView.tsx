@@ -201,8 +201,8 @@ function enrichNodes(
 
     const headerHtml = `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${headerParts.join('')}</div>`;
 
-    // flex column-reverse: header stays at bottom, sections expand upward
-    contentDiv.innerHTML = `<div style="display:flex;flex-direction:column-reverse;">${headerHtml}${sectionsHtml}</div>`;
+    // sections first, header second — sections appear above header in normal flow
+    contentDiv.innerHTML = `<div style="display:flex;flex-direction:column;">${sectionsHtml}${headerHtml}</div>`;
 
     // Apply expanded state on first render if needed
     if (hasSections && isExpanded) {
