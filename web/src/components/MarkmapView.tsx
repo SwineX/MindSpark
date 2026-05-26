@@ -248,15 +248,6 @@ export function MarkmapView() {
         autoFit: false,
         duration: 0,
       });
-      // Disable d3-zoom's dblclick handler so our own dblclick→MetaPanel works
-      const svgEl = svgRef.current as any;
-      if (svgEl?.__zoom) {
-        const origFilter = svgEl.__zoom.filter;
-        svgEl.__zoom.filter((event: any) => {
-          if (event.type === 'dblclick') return false;
-          return origFilter ? origFilter(event) : true;
-        });
-      }
     }
 
     if (mdContent) {
@@ -274,6 +265,8 @@ export function MarkmapView() {
     }
   }, [mdContent]);
 
+  const lastClickRef = useRef<{ time: number; dataPath: string }>({ time: 0, dataPath: '' });
+
   const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as SVGElement;
     const nodeEl = target.closest('.markmap-node') as HTMLElement | null;
@@ -284,9 +277,22 @@ export function MarkmapView() {
 
     const dataPath = nodeEl.dataset.path ?? '';
     const path = pathMapRef.current.get(dataPath) ?? '';
-
-    // Toggle section expand/collapse
     const leafTitle = path ? path.split('/').pop() ?? path : '';
+
+    // Detect double-click: same node within 350ms → open MetaPanel
+    const now = Date.now();
+    const prev = lastClickRef.current;
+    if (prev.dataPath === dataPath && now - prev.time < 350) {
+      const meta = metaMapRef.current.get(leafTitle) ?? null;
+      const sections = sectionsMapRef.current.get(leafTitle) ?? [];
+      selectNode(path, meta, sections);
+      prev.time = 0;
+      return;
+    }
+    prev.time = now;
+    prev.dataPath = dataPath;
+
+    // Single click: toggle section expand/collapse
     const nodeSections = sectionsMapRef.current.get(leafTitle);
     if (nodeSections && nodeSections.length > 0) {
       const expanded = expandedNodesRef.current;
@@ -302,31 +308,12 @@ export function MarkmapView() {
     }
   }, [selectNode]);
 
-  const handleDblClick = useCallback((e: MouseEvent) => {
-    const target = e.target as SVGElement;
-    const nodeEl = target.closest('.markmap-node') as HTMLElement | null;
-    if (!nodeEl) return;
-
-    const dataPath = nodeEl.dataset.path ?? '';
-    const path = pathMapRef.current.get(dataPath) ?? '';
-    if (path) {
-      const leafTitle = path.split('/').pop() ?? path;
-      const meta = metaMapRef.current.get(leafTitle) ?? null;
-      const sections = sectionsMapRef.current.get(leafTitle) ?? [];
-      selectNode(path, meta, sections);
-    }
-  }, [selectNode]);
-
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
     svg.addEventListener('click', handleClick);
-    svg.addEventListener('dblclick', handleDblClick);
-    return () => {
-      svg.removeEventListener('click', handleClick);
-      svg.removeEventListener('dblclick', handleDblClick);
-    };
-  }, [handleClick, handleDblClick]);
+    return () => svg.removeEventListener('click', handleClick);
+  }, [handleClick]);
 
   return <svg ref={svgRef} className="markmap-svg" />;
 }
