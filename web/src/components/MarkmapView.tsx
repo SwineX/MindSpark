@@ -126,12 +126,21 @@ function enrichNodes(
     const nodeSections = sectionsByHeading.get(cleanTitle);
     const hasSections = nodeSections && nodeSections.length > 0;
 
+    /* --- on re-enrich: only toggle CSS classes (preserves transition) --- */
+    if (contentDiv.querySelector('.mindspark-sections')) {
+      const sectionsDiv = contentDiv.querySelector('.mindspark-sections')!;
+      sectionsDiv.classList.toggle('expanded', isExpanded);
+      sectionsDiv.classList.toggle('collapsed', !isExpanded);
+      const toggleBtn = contentDiv.querySelector('.mindspark-toggle') as HTMLElement | null;
+      if (toggleBtn) toggleBtn.textContent = isExpanded ? 'collapse −' : 'expand +';
+      continue;
+    }
+
     /* --- sections block (above title) --- */
     let sectionsHtml = '';
     if (hasSections) {
-      const expandedClass = isExpanded ? 'expanded' : 'collapsed';
       sectionsHtml =
-        `<div class="mindspark-sections ${expandedClass}">`;
+        `<div class="mindspark-sections collapsed">`;
       for (const sec of nodeSections!) {
         const secColor = SECTION_COLORS[sec.title] || SECTION_DEFAULT_COLOR;
         sectionsHtml +=
@@ -182,11 +191,11 @@ function enrichNodes(
       );
     }
 
-    // collapse toggle arrow (only if node has sections)
+    // expand/collapse toggle button (only if node has sections)
     if (hasSections) {
-      const arrow = isExpanded ? '▲' : '▼';
+      const toggleLabel = isExpanded ? 'collapse −' : 'expand +';
       headerParts.push(
-        `<span style="font-size:0.6em;color:#6868a0;margin-left:auto;cursor:pointer;user-select:none;flex-shrink:0;">${arrow}</span>`,
+        `<span class="mindspark-toggle" style="font-size:0.58em;color:#8888b0;border:1px solid #333360;border-radius:3px;padding:1px 5px;margin-left:auto;cursor:pointer;user-select:none;flex-shrink:0;">${toggleLabel}</span>`,
       );
     }
 
@@ -194,6 +203,13 @@ function enrichNodes(
 
     // flex column-reverse: header stays at bottom, sections expand upward
     contentDiv.innerHTML = `<div style="display:flex;flex-direction:column-reverse;">${headerHtml}${sectionsHtml}</div>`;
+
+    // Apply expanded state on first render if needed
+    if (hasSections && isExpanded) {
+      const sectionsDiv = contentDiv.querySelector('.mindspark-sections')!;
+      sectionsDiv.classList.remove('collapsed');
+      sectionsDiv.classList.add('expanded');
+    }
   }
 }
 
@@ -269,8 +285,6 @@ export function MarkmapView() {
     }
   }, [mdContent]);
 
-  const lastClickRef = useRef<{ time: number; dataPath: string }>({ time: 0, dataPath: '' });
-
   const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as SVGElement;
     const nodeEl = target.closest('.markmap-node') as HTMLElement | null;
@@ -283,32 +297,29 @@ export function MarkmapView() {
     const path = pathMapRef.current.get(dataPath) ?? '';
     const leafTitle = path ? path.split('/').pop() ?? path : '';
 
-    // Detect double-click: same node within 350ms → open MetaPanel
-    const now = Date.now();
-    const prev = lastClickRef.current;
-    if (prev.dataPath === dataPath && now - prev.time < 350) {
+    // Click on toggle button → only toggle sections
+    if (target.closest('.mindspark-toggle')) {
+      const nodeSections = sectionsMapRef.current.get(leafTitle);
+      if (nodeSections && nodeSections.length > 0) {
+        const expanded = expandedNodesRef.current;
+        if (expanded.has(dataPath)) {
+          expanded.delete(dataPath);
+        } else {
+          expanded.add(dataPath);
+        }
+        const svg = svgRef.current;
+        if (svg) {
+          enrichNodes(svg, metaMapRef.current, sectionsMapRef.current, expanded);
+        }
+      }
+      return;
+    }
+
+    // Click anywhere else on node → open property panel
+    if (path) {
       const meta = metaMapRef.current.get(leafTitle) ?? null;
       const sections = sectionsMapRef.current.get(leafTitle) ?? [];
       selectNode(path, meta, sections);
-      prev.time = 0;
-      return;
-    }
-    prev.time = now;
-    prev.dataPath = dataPath;
-
-    // Single click: toggle section expand/collapse
-    const nodeSections = sectionsMapRef.current.get(leafTitle);
-    if (nodeSections && nodeSections.length > 0) {
-      const expanded = expandedNodesRef.current;
-      if (expanded.has(dataPath)) {
-        expanded.delete(dataPath);
-      } else {
-        expanded.add(dataPath);
-      }
-      const svg = svgRef.current;
-      if (svg) {
-        enrichNodes(svg, metaMapRef.current, sectionsMapRef.current, expanded);
-      }
     }
   }, [selectNode]);
 
