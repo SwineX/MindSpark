@@ -273,6 +273,11 @@ export function MarkmapView() {
       return;
     }
 
+    // Save view transform before MetaPanel resize triggers markmap's auto-fit
+    const svg = svgRef.current;
+    const g = svg?.querySelector('g');
+    const savedTransform = g?.getAttribute('transform') ?? null;
+
     const dataPath = nodeEl.dataset.path ?? '';
     const path = pathMapRef.current.get(dataPath) ?? '';
 
@@ -286,8 +291,6 @@ export function MarkmapView() {
       } else {
         expanded.add(dataPath);
       }
-      // Re-enrich to update section visibility
-      const svg = svgRef.current;
       if (svg) {
         enrichNodes(svg, metaMapRef.current, sectionsMapRef.current, expanded);
       }
@@ -298,6 +301,14 @@ export function MarkmapView() {
       const meta = metaMapRef.current.get(leafTitle) ?? null;
       const sections = nodeSections ?? [];
       selectNode(path, meta, sections);
+    }
+
+    // Restore view after MetaPanel resize triggers markmap auto-fit
+    if (savedTransform) {
+      requestAnimationFrame(() => {
+        const currentG = svgRef.current?.querySelector('g');
+        if (currentG) currentG.setAttribute('transform', savedTransform);
+      });
     }
   }, [selectNode]);
 
