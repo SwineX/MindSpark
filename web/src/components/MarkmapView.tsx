@@ -126,11 +126,10 @@ function enrichNodes(
     const nodeSections = sectionsByHeading.get(cleanTitle);
     const hasSections = nodeSections && nodeSections.length > 0;
 
-    /* --- on re-enrich: only toggle CSS classes (preserves transition) --- */
+    /* --- on re-enrich: only toggle display (changes scrollHeight → ResizeObserver fires) --- */
     if (contentDiv.querySelector('.mindspark-sections')) {
-      const sectionsDiv = contentDiv.querySelector('.mindspark-sections')!;
-      sectionsDiv.classList.toggle('expanded', isExpanded);
-      sectionsDiv.classList.toggle('collapsed', !isExpanded);
+      const sectionsDiv = contentDiv.querySelector('.mindspark-sections') as HTMLElement;
+      sectionsDiv.style.display = isExpanded ? 'flex' : 'none';
       const toggleBtn = contentDiv.querySelector('.mindspark-toggle') as HTMLElement | null;
       if (toggleBtn) toggleBtn.textContent = isExpanded ? 'collapse −' : 'expand +';
       continue;
@@ -140,7 +139,7 @@ function enrichNodes(
     let sectionsHtml = '';
     if (hasSections) {
       sectionsHtml =
-        `<div class="mindspark-sections collapsed">`;
+        `<div class="mindspark-sections" style="display:none;">`;
       for (const sec of nodeSections!) {
         const secColor = SECTION_COLORS[sec.title] || SECTION_DEFAULT_COLOR;
         sectionsHtml +=
@@ -206,9 +205,7 @@ function enrichNodes(
 
     // Apply expanded state on first render if needed
     if (hasSections && isExpanded) {
-      const sectionsDiv = contentDiv.querySelector('.mindspark-sections')!;
-      sectionsDiv.classList.remove('collapsed');
-      sectionsDiv.classList.add('expanded');
+      (contentDiv.querySelector('.mindspark-sections') as HTMLElement).style.display = 'flex';
     }
   }
 }

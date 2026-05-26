@@ -611,19 +611,4 @@ body {
   flex-direction: column;
   gap: 3px;
   overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.25s ease, margin-bottom 0.25s ease;
-}
-
-.mindspark-sections.expanded {
-  max-height: 600px;
-  opacity: 1;
-  margin-bottom: 5px;
-}
-
-.mindspark-sections.collapsed {
-  max-height: 0;
-  opacity: 0;
-  margin-bottom: 0;
-  border-left-width: 0;
-  padding-left: 0;
 }
